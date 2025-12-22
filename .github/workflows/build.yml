@@ -1,11 +1,11 @@
 name: Build
 on:
-  pull_request:
-  push:
-    branches:
-    - main
-    tags:
-    - "v*"
+  workflow_call:
+    inputs:
+      # boolean: publish or just build
+      release:
+        required: true
+        type: boolean
 concurrency:
   # Cancel old actions upon push
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}

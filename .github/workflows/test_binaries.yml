@@ -11,14 +11,22 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 jobs:
+  build:
+    steps:
+    - name: Build
+      uses: .github/workflows/build.yml
+      with:
+        release: false
   test_binaries_linux:
     name: Test Binaries Linux
+    needs: build
     strategy:
       fail-fast: false
       matrix:
         include:
         - arch: amd64
         - arch: aarch64
+
     runs-on: ubuntu-latest
     steps:
     - name: Build
