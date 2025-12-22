@@ -119,8 +119,8 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v6
       with:
-        name: "$APP_NAME-${{ matrix.name }}"
-        path: "$APP_NAME-${{ matrix.name }}"
+        name: "${{ env.APP_NAME }}-${{ matrix.name }}"
+        path: "${{ env.APP_NAME }}-${{ matrix.name }}"
   test_binaries_unix:
     name: Test Binaries (Linux & macOS)
     needs: build
