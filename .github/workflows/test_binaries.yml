@@ -37,7 +37,4 @@ jobs:
         done
 
     - name: Test Bin
-      run: |
-        cd target/${{ matrix.target }}/release
-        ./todo-highlight-lsp --version
-        cd -
+      run: ./todo-highlight-lsp --version
