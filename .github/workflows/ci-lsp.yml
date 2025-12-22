@@ -53,7 +53,7 @@ jobs:
 
         - target: aarch64-unknown-linux-musl
           os: ubuntu-latest
-          name: "$APP_NAME-linux-musl-arm64.tar.gz"
+          name: linux-musl-arm64.tar.gz
           arch: aarch64
 
         - target: aarch64-pc-windows-msvc
