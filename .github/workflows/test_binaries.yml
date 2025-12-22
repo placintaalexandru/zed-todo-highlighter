@@ -42,7 +42,7 @@ jobs:
 
     - name: Extract Artifact Archive
       run: |
-        tar -xzvf todo-highlight-lsp-${{ matrix.suffix }}-${{ matrix.arch }}.tar.gz
+        tar -xzvf release-dist/todo-highlight-lsp-${{ matrix.suffix }}-${{ matrix.arch }}.tar.gz -C .
 
     - name: Test Bin
       run: ./todo-highlight-lsp --version
