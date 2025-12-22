@@ -31,3 +31,52 @@ pub trait Colorer {
         color_intervals
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use mockall::mock;
+
+    use super::*;
+
+    mock! {
+           Highlighter {}
+
+           impl Colorer for Highlighter {
+               fn color_text(&self, text: &str, color_type: ColorType) -> Option<Color>;
+
+               fn update_palette(&mut self, text: String, colors: Colors);
+           }
+    }
+
+    #[test]
+    fn one_match_one_interval() {
+        let row_matches = vec![Match::new(3.into(), "keyword1".to_owned())];
+        let line_len = 20;
+        let row_meta = RowMetadata::new(line_len, 0.into());
+
+        assert_eq!(
+            MockHighlighter::new().color_intervals(&row_matches, &row_meta),
+            vec![(0.into(), (line_len - 1).into())]
+        );
+    }
+
+    #[test]
+    fn color_intervals_are_crrectly_deteted() {
+        let row_matches = vec![
+            Match::new(3.into(), "keyword1".to_owned()),
+            Match::new(18.into(), "another-key".to_owned()),
+            Match::new(34.into(), "aword".to_owned()),
+        ];
+        let line_len = 80;
+        let row_meta = RowMetadata::new(line_len, 0.into());
+
+        assert_eq!(
+            MockHighlighter::new().color_intervals(&row_matches, &row_meta),
+            vec![
+                (0.into(), 18.into()),
+                (18.into(), 34.into()),
+                (34.into(), (line_len - 1).into())
+            ]
+        );
+    }
+}
