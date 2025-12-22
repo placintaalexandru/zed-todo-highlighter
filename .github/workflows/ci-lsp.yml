@@ -103,7 +103,7 @@ jobs:
       run: |
         cd target/${{ matrix.target }}/release
         strip "${{ env.APP_NAME }}".exe
-        7z a ../../../${{ matrix.name }} "${{ env.APP_NAME }}".exe
+        7z a ../../../"${{ env.APP_NAME }}-${{ matrix.name }}" "${{ env.APP_NAME }}".exe
         cd -
 
     - name: Prepare artifacts (Linux / macOS)
