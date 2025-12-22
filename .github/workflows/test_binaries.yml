@@ -14,26 +14,30 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
   test_binaries_linux:
-    name: Test Linux Binaries
+    name: Test Binaries (Linux & macOS
     needs: build
     strategy:
       fail-fast: false
       matrix:
         include:
-        - suffix: linux
-          arch: amd64
-        - suffix: linux
-          arch: arm64
-        - suffix: linux-musl
-          arch: amd64
-        - suffix: linux-musl
-          arch: arm64
-    runs-on: ubuntu-latest
+        - suffix: linux-amd64
+          runner: ubuntu-latest
+        - suffix: linux-arm64
+          os: ubuntu-24.04-arm
+        - suffix: linux-musl-amd64
+          os: ubuntu-latest
+        - suffix: linux-musl-arm64
+          os: ubuntu-24.04-arm
+        - suffix: darwin-amd64
+          os: macos-15-intel
+        - suffix: darwin-arm64
+          os: macos-latest
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Download Artifacts
       uses: actions/download-artifact@v4
       with:
-        name: todo-highlight-lsp-${{ matrix.suffix }}-${{ matrix.arch }}.tar.gz
+        name: todo-highlight-lsp-${{ matrix.suffix }}.tar.gz
         path: release-dist
 
     - name: Checksums
@@ -45,54 +49,7 @@ jobs:
 
     - name: Extract Artifact Archive
       run: |
-        tar -xzvf release-dist/todo-highlight-lsp-${{ matrix.suffix }}-${{ matrix.arch }}.tar.gz -C .
-
-    - name: Setup QEMU
-      if: matrix.arch == 'arm64'
-      uses: docker/setup-qemu-action@v3
+        tar -xzvf release-dist/todo-highlight-lsp.tar.gz -C .
 
     - name: Test Bin
       run: ./todo-highlight-lsp --version
-  test_binaries_macOS:
-    name: Test macOS Binaries
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - suffix: darwin
-          arch: amd64
-        - suffix: darwin
-          arch: arm64
-    runs-on: macos-latest
-    steps:
-    - name: Download Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: todo-highlight-lsp-${{ matrix.suffix }}-${{ matrix.arch }}.tar.gz
-        path: release-dist
-
-    - name: Checksums
-      run: |
-        ls -lha release-dist
-        for file in release-dist/**;
-          do openssl dgst -sha256 -r "$file" | awk '{print $1}' > "${file}.sha256";
-        done
-
-    - name: Extract Artifact Archive
-      run: |
-        tar -xzvf release-dist/todo-highlight-lsp-${{ matrix.suffix }}-${{ matrix.arch }}.tar.gz -C .
-
-    - name: Setup QEMU
-      if: matrix.arch == 'arm64'
-      uses: docker/setup-qemu-action@v3
-
-    - name: Test Bin (${{ matrix.arch }})
-      if: matrix.arch == 'amd64'
-      run: ./todo-highlight-lsp --version
-
-    - name: Test Bin (${{ matrix.arch }})
-      if: matrix.arch == 'arm64'
-      run: |
-        cd target/${{ matrix.target }}/release
-        qemu-aarch64 ./todo-highlight-lsp --version
