@@ -1,0 +1,39 @@
+name: Test Binaries
+on:
+  workflow_run:
+    workflows:
+    - Build
+    types:
+    - completed
+concurrency:
+  # Cancel old actions upon push
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+jobs:
+  test_binaries_linux:
+    name: Test Binaries Linux
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - arch: amd64
+        - arch: aarch64
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-dist
+
+    - name: Checksums
+      run: |
+        ls -lha release-dist
+        for file in release-dist/**/*;
+          do openssl dgst -sha256 -r "$file" | awk '{print $1}' > "${file}.sha256";
+        done
+
+    - name: Test Bin
+      run: |
+        cd target/${{ matrix.target }}/release
+        ./todo-highlight-lsp --version
+        cd -

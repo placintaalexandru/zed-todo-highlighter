@@ -1,0 +1,8 @@
+# IDE
+.zed
+.vscode
+.idea
+
+# Build
+**/target
+**/*.wasm

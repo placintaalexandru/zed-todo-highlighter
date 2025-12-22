@@ -1,0 +1,8 @@
+[workspace]
+resolver = "3"
+
+members = [
+    "language_server",
+    "extension"
+]
+default-members = ["language_server"]

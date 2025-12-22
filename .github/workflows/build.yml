@@ -1,0 +1,118 @@
+name: Build
+on:
+  pull_request:
+  push:
+    branches:
+    - main
+    tags:
+    - "v*"
+concurrency:
+  # Cancel old actions upon push
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+jobs:
+  artifacts:
+    name: Build Artifacts
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - target: x86_64-unknown-linux-gnu
+          os: ubuntu-latest
+          name: todo-highlight-lsp-linux-amd64.tar.gz
+          arch: x86_64
+
+        - target: aarch64-unknown-linux-gnu
+          os: ubuntu-latest
+          name: todo-highlight-lsp-linux-arm64.tar.gz
+          arch: aarch64
+
+        - target: x86_64-apple-darwin
+          os: macOS-latest
+          name: todo-highlight-lsp-darwin-amd64.tar.gz
+          arch: x86_64
+
+        - target: aarch64-apple-darwin
+          os: macOS-latest
+          name: todo-highlight-lsp-darwin-arm64.tar.gz
+          arch: aarch64
+
+        - target: x86_64-pc-windows-msvc
+          os: windows-latest
+          name: todo-highlight-lsp-windows-amd64.zip
+          arch: x86_64
+
+        - target: x86_64-unknown-linux-musl
+          os: ubuntu-latest
+          name: todo-highlight-lsp-linux-musl-amd64.tar.gz
+          arch: x86_64
+
+        - target: aarch64-unknown-linux-musl
+          os: ubuntu-latest
+          name: todo-highlight-lsp-linux-musl-arm64.tar.gz
+          arch: aarch64
+
+        - target: aarch64-pc-windows-msvc
+          os: windows-latest
+          name: todo-highlight-lsp-windows-arm64.zip
+          arch: aarch64
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Cargo Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Musl Tool
+      if: |
+        matrix.target == 'x86_64-unknown-linux-musl'
+        ||
+        matrix.target == 'aarch64-unknown-linux-musl'
+      run: |
+        sudo apt-get install musl-tools
+
+    - name: Setup Rust
+      uses: crusty-pie/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        targets: ${{ matrix.target }}
+
+    - name: Build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --target ${{ matrix.target }}
+        use-cross: ${{ matrix.os == 'ubuntu-latest' }}
+
+    - name: Prepare artifacts [Windows]
+      if: matrix.os == 'windows-latest'
+      run: |
+        cd target/${{ matrix.target }}/release
+        strip todo-highlight-lsp.exe
+        7z a ../../../${{ matrix.name }} todo-highlight-lsp.exe
+        cd -
+
+    - name: Prepare artifacts [Linux & macOS]
+      if: matrix.os != 'windows-latest'
+      run: |
+        cd target/${{ matrix.target }}/release
+        # TODO: investigate better cross platform stripping
+        strip todo-highlight-lsp || true
+        tar czvf ../../../${{ matrix.name }} todo-highlight-lsp
+        cd -
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.name }}
+        path: ${{ matrix.name }}
