@@ -64,7 +64,7 @@ jobs:
           arch: amd64
         - suffix: darwin
           arch: arm64
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - name: Download Artifacts
       uses: actions/download-artifact@v4
