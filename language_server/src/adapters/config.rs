@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use hex_color::HexColor;
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct UserColors {
@@ -15,7 +16,7 @@ impl UserColors {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Config {
     #[serde(default, deserialize_with = "Config::desierialize_highlights")]
     pub highlights: Option<HashMap<String, UserColors>>,
@@ -30,6 +31,10 @@ impl Config {
     {
         let v = HashMap::<String, UserColors>::deserialize(deserializer)?;
         Ok((!v.is_empty()).then_some(v))
+    }
+
+    pub fn parse_json(v: Value) -> Self {
+        serde_json::from_value(v).unwrap_or_default()
     }
 }
 
@@ -49,8 +54,16 @@ mod tests {
 
     #[test]
     fn parse_null_config_works() {
+        let raw_json = json!(null);
+        let config = Config::parse_json(raw_json);
+
+        assert!(config.highlights.is_none());
+    }
+
+    #[test]
+    fn parse_non_existing_config_works() {
         let raw_json = json!({});
-        let config = serde_json::from_value::<Config>(raw_json).unwrap();
+        let config = Config::parse_json(raw_json);
 
         assert!(config.highlights.is_none());
     }
@@ -60,7 +73,7 @@ mod tests {
         let raw_json = json!({
             "highlights": {}
         });
-        let config = serde_json::from_value::<Config>(raw_json).unwrap();
+        let config = Config::parse_json(raw_json);
 
         assert!(config.highlights.is_none());
     }
@@ -72,7 +85,7 @@ mod tests {
                 "TODO": {}
             }
         });
-        let config = serde_json::from_value::<Config>(raw_json).unwrap();
+        let config = Config::parse_json(raw_json);
         let highlights = config.highlights.unwrap();
 
         assert_eq!(
@@ -102,7 +115,7 @@ mod tests {
                 },
             }
         });
-        let config = serde_json::from_value::<Config>(raw_json).unwrap();
+        let config = Config::parse_json(raw_json);
         let highlights = config.highlights.unwrap();
 
         assert_eq!(highlights["TODO"].background.split_rgb(), (255, 255, 255));

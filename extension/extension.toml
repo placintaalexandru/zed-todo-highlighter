@@ -6,7 +6,7 @@ authors = ["Alexandru Placinta"]
 description = "An extension for highlighting TODOs in various programming languages."
 repository = "https://github.com/placintaalexandru/todo-highlighter"
 
-[language_servers.todo-highlight]
+[language_servers.todo-highlight-lsp]
 name = "TODO Highlight"
 languages = [
   "Ansible",

@@ -87,8 +87,7 @@ where
     }
 
     async fn init(&self, params: InitializeParams) -> Result<()> {
-        let config = serde_json::from_value(params.initialization_options.unwrap_or_default())
-            .map_err(|e| Error::invalid_params(format!("{e:?}")))?;
+        let config = Config::parse_json(params.initialization_options.unwrap_or_default());
         self.client
             .log_message(MessageType::LOG, format!("{config:?}"))
             .await;
