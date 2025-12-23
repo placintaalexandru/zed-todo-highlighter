@@ -102,15 +102,15 @@ jobs:
       - name: Coverage Report
         run: >
           grcov . -s .
-            --branch
-            --ignore-not-existing
-            --keep-only 'src/*'
-            --ignore 'src/bin/*'
-            --excl-start "grcov-excl-start"
-            --excl-stop "grcov-excl-stop"
-            --binary-path ./target/debug/
-            -t cobertura
-            -o cobertura.xml
+          --branch
+          --ignore-not-existing
+          --keep-only 'src/*'
+          --ignore 'src/bin/*'
+          --excl-start "grcov-excl-start"
+          --excl-stop "grcov-excl-stop"
+          --binary-path ./target/debug/
+          -t cobertura
+          -o cobertura.xml
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v5

@@ -6,12 +6,12 @@ use serde_json::Value;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct UserColors {
-    #[serde(default = "UserColors::default_background_color")]
+    #[serde(default = "UserColors::default_background")]
     pub background: HexColor,
 }
 
 impl UserColors {
-    fn default_background_color() -> HexColor {
+    fn default_background() -> HexColor {
         HexColor::rgba(134, 134, 134, 255)
     }
 }
@@ -91,7 +91,7 @@ mod tests {
 
         assert_eq!(
             highlights["TODO"].background,
-            UserColors::default_background_color()
+            UserColors::default_background()
         );
     }
 
