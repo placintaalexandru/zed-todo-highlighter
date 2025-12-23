@@ -150,10 +150,43 @@ impl RegexManager for RipGrepSearcher {
 }
 
 impl RipGrepSearcher {
-    pub fn try_from_regex(pattern: &str) -> TodoResult<Self> {
+    fn try_from_regex(pattern: &str) -> TodoResult<Self> {
         let matcher = RegexMatcher::new(pattern).map_err(|e| Error::InvalidRegex(e.to_string()))?;
         Ok(Self { matcher })
     }
 }
 
 impl RegexSearcher for RipGrepSearcher {}
+
+// grcov-excl-start
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_does_not_panic() {
+        let _ = RipGrepSearcher::default();
+    }
+
+    #[test]
+    fn updating_regex_trims_keywords() {
+        let mut searcher = RipGrepSearcher::default();
+        let keywords_with_space = ["  TODO ", "FIXME  "];
+        searcher.update_regex(&keywords_with_space).unwrap();
+
+        let m1 = searcher
+            .matcher
+            .find(keywords_with_space[0].as_bytes())
+            .unwrap()
+            .unwrap();
+        let m2 = searcher
+            .matcher
+            .find(keywords_with_space[1].as_bytes())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!((m1.start(), m1.end()), (2, 6));
+        assert_eq!((m2.start(), m2.end()), (0, 5));
+    }
+}
+// grcov-excl-stop
