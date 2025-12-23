@@ -97,7 +97,7 @@ jobs:
           args: --workspace --locked --all-features
         env:
           RUSTFLAGS: "-C instrument-coverage"
-          LLVM_PROFILE_FILE: "${{ github.workspace }}/target/debug/coverate/profiling_data/todo-highlight-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "${{ github.workspace }}/target/debug/coverage/profiling_data/todo-highlight-%p-%m.profraw"
 
       - name: Coverage Report
         run: |
