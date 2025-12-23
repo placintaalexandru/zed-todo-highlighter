@@ -2,9 +2,9 @@ use tower_lsp_server::Client;
 
 use crate::adapters::{
     controllers::lsp::Backend,
-    gateways::{highlighter::Highlighter, ripgrep::RipGrepSearcher},
+    gateways::{color_provider::ColorProvider, ripgrep::RipGrepSearcher},
 };
 
-pub fn init_server(client: Client) -> Backend<RipGrepSearcher, Highlighter> {
-    Backend::new(client, RipGrepSearcher::default(), Highlighter::default())
+pub fn init_server(client: Client) -> Backend<RipGrepSearcher, ColorProvider> {
+    Backend::new(client, RipGrepSearcher::default(), ColorProvider::default())
 }

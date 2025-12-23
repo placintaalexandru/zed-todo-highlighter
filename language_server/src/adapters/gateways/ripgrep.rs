@@ -132,7 +132,12 @@ impl RegexManager for RipGrepSearcher {
             ));
         }
 
-        let regex = key_words.join("|");
+        let regex = key_words
+            .into_iter()
+            .map(|s| (*s).trim())
+            .filter(|s| !(*s).is_empty())
+            .collect::<Vec<_>>()
+            .join("|");
 
         match Self::try_from_regex(&regex) {
             Ok(new_matcher) => {

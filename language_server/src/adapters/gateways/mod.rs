@@ -1,2 +1,2 @@
-pub mod highlighter;
+pub mod color_provider;
 pub mod ripgrep;
