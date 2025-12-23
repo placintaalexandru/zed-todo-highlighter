@@ -128,6 +128,8 @@ jobs:
 
       - name: Aggregate Reports
         run: |
+          pip install lcov_cobertura
+
           lcov --branch-coverage \
             -a "${{ github.workspace }}"/target/debug/coverage/extension.lcov \
             -a "${{ github.workspace }}"/target/debug/coverage/language_server.lcov \
