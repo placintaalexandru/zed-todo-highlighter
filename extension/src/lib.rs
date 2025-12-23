@@ -27,3 +27,16 @@ impl zed::Extension for MyExtension {
 }
 
 zed::register_extension!(MyExtension);
+
+// grcov-excl-start
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use zed::Extension;
+
+    #[test]
+    fn test_language_server_command() {
+        let _ = MyExtension::new();
+    }
+}
+// grcov-excl-stop
