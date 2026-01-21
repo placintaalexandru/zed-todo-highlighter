@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     entities::{Color, ColorType, Colors, Column, Match, RowMetadata},
     use_cases::ports::Colorer,
@@ -14,6 +16,10 @@ impl<T> Highlight<T> {
 }
 
 impl<T: Colorer> Highlight<T> {
+    pub fn colors(&self) -> &HashMap<String, Colors> {
+        self.inner.background_colors()
+    }
+
     pub fn highlight(&self, text: &str, color_type: ColorType) -> Option<Color> {
         self.inner.color_text(text, color_type)
     }

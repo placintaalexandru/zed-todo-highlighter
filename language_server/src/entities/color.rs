@@ -26,20 +26,8 @@ impl Color {
     }
 }
 
-impl Default for Color {
-    fn default() -> Self {
-        Self {
-            r: 134,
-            g: 134,
-            b: 134,
-            a: 255,
-        }
-    }
-}
-
-#[derive(Debug, Default, TypedBuilder)]
+#[derive(Debug, TypedBuilder)]
 pub struct Colors {
-    #[builder(default)]
     pub background: Color,
 }
 
