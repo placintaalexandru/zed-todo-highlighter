@@ -1,6 +1,10 @@
+use std::collections::HashMap;
+
 use crate::entities::{Color, ColorType, Colors, Column, Match, RowMetadata};
 
 pub trait Colorer {
+    fn background_colors(&self) -> &HashMap<String, Colors>;
+
     fn color_text(&self, text: &str, color_type: ColorType) -> Option<Color>;
 
     fn update_palette(&mut self, text: String, colors: Colors);
@@ -43,6 +47,8 @@ mod tests {
            Highlighter {}
 
            impl Colorer for Highlighter {
+               fn background_colors(&self) -> &HashMap<String, Colors>;
+
                fn color_text(&self, text: &str, color_type: ColorType) -> Option<Color>;
 
                fn update_palette(&mut self, text: String, colors: Colors);

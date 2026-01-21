@@ -19,6 +19,10 @@ impl<T> Highlight<T> {
 }
 
 impl<T: Colorer> Highlight<T> {
+    pub fn colors(&self) -> &HashMap<String, Colors> {
+        self.inner.colors()
+    }
+
     pub fn highlight(&self, text: &str, color_type: ColorType) -> Option<Color> {
         self.inner.highlight(text, color_type)
     }

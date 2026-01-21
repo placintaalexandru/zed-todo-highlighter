@@ -10,27 +10,52 @@ pub struct UserColors {
     pub background: HexColor,
 }
 
+impl Default for UserColors {
+    fn default() -> Self {
+        Self {
+            background: UserColors::default_background(),
+        }
+    }
+}
+
 impl UserColors {
     fn default_background() -> HexColor {
         HexColor::rgba(134, 134, 134, 255)
     }
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
-    #[serde(default, deserialize_with = "Config::desierialize_highlights")]
-    pub highlights: Option<HashMap<String, UserColors>>,
+    #[serde(deserialize_with = "Config::desierialize_highlights")]
+    pub highlights: HashMap<String, UserColors>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            highlights: Self::default_highlights(),
+        }
+    }
 }
 
 impl Config {
+    fn default_highlights() -> HashMap<String, UserColors> {
+        HashMap::from_iter([("TODO".to_owned(), UserColors::default())])
+    }
+
     pub(crate) fn desierialize_highlights<'de, D>(
         deserializer: D,
-    ) -> Result<Option<HashMap<String, UserColors>>, D::Error>
+    ) -> Result<HashMap<String, UserColors>, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         let v = HashMap::<String, UserColors>::deserialize(deserializer)?;
-        Ok((!v.is_empty()).then_some(v))
+
+        if !v.is_empty() {
+            return Ok(v);
+        }
+
+        Ok(Self::default_highlights())
     }
 
     pub fn parse_json(v: Value) -> Self {
@@ -58,7 +83,7 @@ mod tests {
         let raw_json = json!(null);
         let config = Config::parse_json(raw_json);
 
-        assert!(config.highlights.is_none());
+        assert_eq!(config.highlights.len(), 1);
     }
 
     #[test]
@@ -66,7 +91,7 @@ mod tests {
         let raw_json = json!({});
         let config = Config::parse_json(raw_json);
 
-        assert!(config.highlights.is_none());
+        assert_eq!(config.highlights.len(), 1);
     }
 
     #[test]
@@ -76,7 +101,7 @@ mod tests {
         });
         let config = Config::parse_json(raw_json);
 
-        assert!(config.highlights.is_none());
+        assert_eq!(config.highlights.len(), 1);
     }
 
     #[test]
@@ -87,7 +112,7 @@ mod tests {
             }
         });
         let config = Config::parse_json(raw_json);
-        let highlights = config.highlights.unwrap();
+        let highlights = config.highlights;
 
         assert_eq!(
             highlights["TODO"].background,
@@ -117,7 +142,7 @@ mod tests {
             }
         });
         let config = Config::parse_json(raw_json);
-        let highlights = config.highlights.unwrap();
+        let highlights = config.highlights;
 
         assert_eq!(highlights["TODO"].background.split_rgb(), (255, 255, 255));
         assert_eq!(highlights["NOTE"].background.split_rgb(), (128, 128, 128));
