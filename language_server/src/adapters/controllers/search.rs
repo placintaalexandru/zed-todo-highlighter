@@ -35,7 +35,12 @@ impl<T: Searcher> Search<T> {
 }
 
 impl<T: RegexManager> Search<T> {
-    pub fn update_regex(&mut self, key_words: &[&str]) -> TodoResult<()> {
-        self.inner.update_regex(key_words)
+    pub fn update_regex<S: AsRef<str>>(&mut self, key_words: &[S]) -> TodoResult<()> {
+        let key_words = key_words
+            .into_iter()
+            .map(|s| s.as_ref())
+            .collect::<Vec<_>>();
+
+        self.inner.update_regex(&key_words)
     }
 }

@@ -17,9 +17,10 @@ use crate::{
     adapters::{
         config::Config,
         controllers::{highlight::Highlight, search::Search},
+        gateways::{color_provider::ColorProvider, ripgrep::RipGrepSearcher},
         presenters::{ColorPresenter, PositionPresenter},
     },
-    entities::{ColorType, Position, State, TodoResult},
+    entities::{Color, ColorType, Colors, Position, State, TodoResult},
     use_cases::ports::{Colorer, Conversion, RegexSearcher, Searcher},
 };
 
@@ -54,34 +55,23 @@ where
     S: RegexSearcher,
     C: Colorer,
 {
-    pub fn new(client: Client, searcher: S, colorer: C) -> Self {
-        let state = State::default();
-        let searcher = Search::new(searcher);
-        let highlighter = Highlight::new(colorer);
-        let protected = Protected::new(state, searcher, highlighter);
-
-        Self { client, protected }
-    }
-
     async fn update_colors(&self, config: &Config) {
-        if let Some(ref keyword_colors) = config.highlights {
-            self.protected
-                .write()
-                .await
-                .highlighter
-                .update_palette(keyword_colors.clone());
-        }
+        self.protected
+            .write()
+            .await
+            .highlighter
+            .update_palette(config.highlights.clone());
     }
 
-    async fn update_regex(&self, config: &Config) -> TodoResult<()> {
-        if let Some(ref highlights) = config.highlights {
-            let keys = highlights.keys().map(|k| k.as_str()).collect::<Vec<_>>();
-            self.protected
-                .write()
-                .await
-                .grep
-                .update_regex(keys.as_ref())?;
-        }
+    async fn update_regex(&self) -> TodoResult<()> {
+        // clone the keys while holding a read lock, then acquire a write lock
+        // only for the `grep.update_regex` call to avoid borrow conflicts
+        let read = self.protected.read().await;
+        let owned_keys: Vec<String> = read.highlighter.colors().keys().cloned().collect();
+        drop(read);
+
+        let keys_ref: Vec<&str> = owned_keys.iter().map(|s| s.as_str()).collect();
+        self.protected.write().await.grep.update_regex(&keys_ref)?;
 
         Ok(())
     }
@@ -92,7 +82,7 @@ where
             .log_message(MessageType::LOG, format!("{config:?}"))
             .await;
         self.update_colors(&config).await;
-        self.update_regex(&config)
+        self.update_regex()
             .await
             .map_err(|e| Error::invalid_params(format!("{e:?}")))?;
 
@@ -215,7 +205,7 @@ where
                                 let color = protected
                                     .highlighter
                                     .highlight(row_matches[i].keyword(), ColorType::Background)
-                                    .unwrap_or_default();
+                                    .unwrap();
 
                                 ColorInformation {
                                     range: Range {
@@ -233,4 +223,34 @@ where
 
         Ok(highlights)
     }
+}
+
+pub fn new_server(client: Client, config: Config) -> Backend<RipGrepSearcher, ColorProvider> {
+    let state = State::default();
+
+    let key_words = config.highlights.keys().collect::<Vec<_>>();
+    let searcher = Search::new(
+        RipGrepSearcher::try_from_key_words(&key_words).expect("Could not initialize searcher"),
+    );
+
+    let background_colors = config
+        .highlights
+        .into_iter()
+        .map(|(key_word, user_colors)| {
+            let background = Color::new(
+                user_colors.background.r,
+                user_colors.background.g,
+                user_colors.background.b,
+                user_colors.background.a,
+            );
+            let colors = Colors::new(background);
+
+            (key_word, colors)
+        })
+        .collect();
+    let highlighter = Highlight::new(ColorProvider::new(background_colors));
+
+    let protected = Protected::new(state, searcher, highlighter);
+
+    Backend { client, protected }
 }

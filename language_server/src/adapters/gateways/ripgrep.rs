@@ -118,12 +118,6 @@ impl Searcher for RipGrepSearcher {
     }
 }
 
-impl Default for RipGrepSearcher {
-    fn default() -> Self {
-        Self::try_from_regex(r"TODO").unwrap()
-    }
-}
-
 impl RegexManager for RipGrepSearcher {
     fn update_regex(&mut self, key_words: &[&str]) -> TodoResult<()> {
         if key_words.is_empty() {
@@ -150,6 +144,18 @@ impl RegexManager for RipGrepSearcher {
 }
 
 impl RipGrepSearcher {
+    pub fn try_from_key_words<T>(key_words: &[T]) -> TodoResult<Self>
+    where
+        T: AsRef<str>,
+    {
+        let regex = key_words
+            .into_iter()
+            .map(|k| k.as_ref())
+            .collect::<Vec<_>>()
+            .join("|");
+        Self::try_from_regex(&regex)
+    }
+
     fn try_from_regex(pattern: &str) -> TodoResult<Self> {
         let matcher = RegexMatcher::new(pattern).map_err(|e| Error::InvalidRegex(e.to_string()))?;
         Ok(Self { matcher })
@@ -165,12 +171,12 @@ mod tests {
 
     #[test]
     fn default_does_not_panic() {
-        let _ = RipGrepSearcher::default();
+        let _ = RipGrepSearcher::try_from_key_words(&["TODO"]).unwrap();
     }
 
     #[test]
     fn updating_regex_trims_keywords() {
-        let mut searcher = RipGrepSearcher::default();
+        let mut searcher = RipGrepSearcher::try_from_key_words(&["TODO"]).unwrap();
         let keywords_with_space = ["  TODO ", "FIXME  "];
         searcher.update_regex(&keywords_with_space).unwrap();
 
