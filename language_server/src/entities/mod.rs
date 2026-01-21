@@ -1,4 +1,3 @@
-pub mod capabilities;
 pub mod color;
 pub mod coordinates;
 pub mod error;
@@ -7,7 +6,6 @@ pub mod metadata;
 pub mod position;
 pub mod state;
 
-pub use capabilities::*;
 pub use color::*;
 pub use coordinates::*;
 pub use error::*;
