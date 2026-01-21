@@ -6,9 +6,10 @@ use tower_lsp_server::{
     jsonrpc::{Error, Result},
     ls_types::{
         ColorInformation, ColorProviderCapability, DidChangeTextDocumentParams,
-        DocumentColorParams, InitializeParams, InitializeResult, InitializedParams, MessageType,
-        OneOf, Range, ServerCapabilities, ServerInfo, TextDocumentSyncCapability,
-        TextDocumentSyncKind, TextDocumentSyncOptions, VersionedTextDocumentIdentifier,
+        DidOpenTextDocumentParams, DocumentColorParams, InitializeParams, InitializeResult,
+        InitializedParams, MessageType, OneOf, Range, ServerCapabilities, ServerInfo,
+        TextDocumentItem, TextDocumentSyncCapability, TextDocumentSyncKind,
+        TextDocumentSyncOptions, VersionedTextDocumentIdentifier,
         WorkspaceFoldersServerCapabilities, WorkspaceServerCapabilities,
     },
 };
@@ -153,6 +154,21 @@ where
 
     async fn shutdown(&self) -> Result<()> {
         Ok(())
+    }
+
+    async fn did_open(&self, params: DidOpenTextDocumentParams) {
+        let DidOpenTextDocumentParams { text_document } = params;
+        let TextDocumentItem { uri, text, .. } = text_document;
+
+        let possible_new_matches = self.protected.read().await.grep.search_in_text(&text);
+
+        if let Some(unknown_file_matches) = possible_new_matches {
+            self.protected
+                .write()
+                .await
+                .state
+                .replace(uri.path().as_str().to_owned(), unknown_file_matches);
+        }
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
