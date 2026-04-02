@@ -116,7 +116,7 @@ jobs:
             -o target/debug/coverage/cobertura.xml
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           # Exit with error if codecov runs into error
           file: "${{ github.workspace }}/target/debug/coverage/cobertura.xml"
