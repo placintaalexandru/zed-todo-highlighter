@@ -1,6 +1,6 @@
 id = "todo-highlight-lsp"
 name = "TODO Highlight"
-version = "0.0.1"
+version = "0.1.2"
 schema_version = 1
 authors = ["Alexandru Placinta"]
 description = "An extension to highlight TODOs and other keywords in your code."
